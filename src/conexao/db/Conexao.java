@@ -4,7 +4,9 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.Properties;
 
 public class Conexao {
@@ -44,6 +46,28 @@ public class Conexao {
 		}
 		catch (IOException e) {
 			throw new ConexaoException(e.getMessage());
+		}
+	}
+	
+	public static void closeStatement(Statement st) {/*Criando metodo para fechar o Statement com try e catch, para que não seja exigido toda vez o tratamento de exceção*/
+		if (st != null) {
+			try {
+				st.close();
+			} catch (SQLException e) {
+				throw new ConexaoException(e.getMessage());
+				
+			}
+		}
+	}
+	
+	public static void closeResultSet(ResultSet rs) {/*Criando metodo para fechar o ResultSet com try e catch, para que não seja exigido toda vez o tratamento de exceção*/
+		if (rs != null) {
+			try {
+				rs.close();
+			} catch (SQLException e) {
+				throw new ConexaoException(e.getMessage());
+				
+			}
 		}
 	}
 }
