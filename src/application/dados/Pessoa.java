@@ -1,21 +1,52 @@
 package application.dados;
 
-import java.util.Date;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Scanner;
+
+import conexao.db.Conexao;
+import conexao.db.ConexaoException;
 
 public class Pessoa {
 	
-	private Integer id;
+	private Integer id;	
 	private String nome;
 	private String email;
-	private Date dtnasc;
+	private String dtnasc;
 	private String endereco;
 	private String sexo;
+	
+	public void CadastarPessoa() {
+	
+	Scanner sc = new Scanner(System.in);
+	
+	System.out.println("Digite o Nome: ");
+	nome = sc.nextLine();
+
+	System.out.println("Digite o e-mail: ");
+	email = sc.nextLine();
+	
+	System.out.println("Digite a data de nascimento(dd/mm/aaaa): ");
+	dtnasc = sc.nextLine();
+	
+	System.out.println("Digite o endereço: ");
+	endereco = sc.nextLine();
+	
+	System.out.println("Digite o seu sexo: ");
+	sexo = sc.nextLine();
+
+	}
 	
 	public Pessoa() {
 		
 	}
 	
-	public Pessoa(Integer id, String nome, String email, Date dtnasc, String endereco, String sexo) {
+	public Pessoa(Integer id, String nome, String email, String dtnasc, String endereco, String sexo) {
 		super();
 		this.id = id;
 		this.nome = nome;
@@ -51,11 +82,11 @@ public class Pessoa {
 		this.email = email;
 	}
 
-	public Date getDtnasc() {
+	public String getDtnasc() {
 		return dtnasc;
 	}
 
-	public void setDtnasc(Date dtnasc) {
+	public void setDtnasc(String dtnasc) {
 		this.dtnasc = dtnasc;
 	}
 
@@ -100,8 +131,71 @@ public class Pessoa {
 		return true;
 	}
 	
+	public void InserirDados() {
+		SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
+		Connection conn = null;
+		PreparedStatement st = null;
+		
+		try {
+			conn = Conexao.getConnection(); /*Criando a conexão*/
+			
+			/*Criando o insert*/
+			st = conn.prepareStatement(
+					"INSERT INTO pessoa "
+					+ "(nome, email, dtnasc, endereco, sexo) "
+					+ "VALUES "
+					+ "(?, ?, ?, ?, ?)");/*Place holder para ser passado como parametro depois*/
+			
+			st.setString(1, nome);
+			st.setString(2, email);
+			st.setDate(3, new java.sql.Date(sdf.parse(dtnasc).getTime()));/*Passar uma data pelo padrão sql.date para inserir no banco*/
+			st.setString(4, endereco);
+			st.setString(5, sexo);
+			
+			int rowsAffected = st.executeUpdate(); /*Pegar a quantidade de registros afetados*/
+			
+			System.out.println("Cadastrado! Linhas Afetadas: " + rowsAffected);
+		}
+		catch (SQLException e) {
+			throw new ConexaoException(e.getMessage());
+		}
+		catch (ParseException e) { /*Necessário tratamento para o sdf.parse*/
+			e.printStackTrace();
+		}
+		finally {
+			Conexao.closeStatement(st);
+			Conexao.closeConnection();/*A conexão sempre é fechada por último*/
+		}
+	}
 	
-
+	public void SelectAll() {
+		
+		Connection conn = null;/*Conecta ao banco*/
+		Statement st = null;/*Prepara uma consulta ao banco*/
+		ResultSet rs = null;/*Resultado da consulta*/
+						
+				try {
+					conn = Conexao.getConnection();/*Abrindo uma conexão*/
+					
+					st = conn.createStatement();/*Instancia de um objeto statment*/
+					
+					rs = st.executeQuery("select * from pessoa");/*fazendo uma consulta a uma tabela no banco*/
+					
+					while (rs.next()) {
+						System.out.println(rs.getInt("id") + "," + rs.getString("nome") + "," + rs.getString("email") + "," + rs.getString("dtnasc") + "," + rs.getString("sexo"));
+					}
+							
+				}
+				catch (SQLException e ) {
+					e.printStackTrace();
+				}
+				finally {
+					Conexao.closeResultSet(rs);
+					Conexao.closeStatement(st);
+					Conexao.closeConnection();
+				}
+				
+			}
 }
 	
 	
